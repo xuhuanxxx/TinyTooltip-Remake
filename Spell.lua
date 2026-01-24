@@ -21,9 +21,14 @@ local function SpellIcon(tip)
     if (addon.db.spell.showIcon) then
         local id = select(2, tip:GetSpell())
         local texture = GetSpellTexture(id or 0)
-        local text = addon:GetLine(tip,1):GetText()
-        if (texture and not strfind(text, "^|T")) then
-            addon:GetLine(tip,1):SetFormattedText("|T%s:16:16:0:0:32:32:2:30:2:30|t %s", texture, text)
+        local okText, text = pcall(function()
+            return addon:GetLine(tip,1):GetText()
+        end)
+        if (texture and okText and type(text) == "string") then
+            local okFind, found = pcall(strfind, text, "^|T")
+            if (okFind and not found) then
+                addon:GetLine(tip,1):SetFormattedText("|T%s:16:16:0:0:32:32:2:30:2:30|t %s", texture, text)
+            end
         end
     end
 end

@@ -17,13 +17,56 @@ local function SafeBool(fn, ...)
     return false
 end
 
+local unpack = table.unpack or unpack
+
+local function SafeBoolEval(fn, ...)
+    local args = {...}
+    local ok, value = pcall(function()
+        return fn(unpack(args)) and true or false
+    end)
+    if ok and type(value) == "boolean" then
+        return value
+    end
+    return false
+end
+
+local function SafeIsUnit(unit, other)
+    return SafeBoolEval(UnitIsUnit, unit, other)
+end
+
+local function SafeIsPlayer(unit)
+    return SafeBoolEval(UnitIsPlayer, unit)
+end
+
+local function IsTargetToken(unit)
+    return type(unit) == "string" and unit:match("target$")
+end
+
 local function GetTargetString(unit)
+    if (IsTargetToken(unit)) then
+        local okName, name = pcall(UnitName, unit)
+        if (not okName or type(name) ~= "string") then return end
+        local icon = addon:GetRaidIcon(unit) or ""
+        local r, g, b = GameTooltip_UnitColor(unit)
+        if SafeIsUnit(unit, "player") then
+            return format("|cffff3333>>%s<<|r", strupper(YOU))
+        end
+        if SafeIsPlayer(unit) then
+            local class = select(2, UnitClass(unit))
+            local colorCode = select(4, GetClassColor(class))
+            return format("%s|c%s%s|r", icon, colorCode or "ffffffff", name)
+        end
+        if (r and g and b) then
+            return format("%s|cff%s[%s]|r", icon, addon:GetHexColor(r, g, b), name)
+        end
+        return format("%s[%s]", icon, name)
+    end
     if (not UnitExists(unit)) then return end
     local name = UnitName(unit)
     local icon = addon:GetRaidIcon(unit) or ""
-    if SafeBool(UnitIsUnit, unit, "player") then
+    if SafeIsUnit(unit, "player") then
         return format("|cffff3333>>%s<<|r", strupper(YOU))
-    elseif SafeBool(UnitIsPlayer, unit) then
+    elseif SafeIsPlayer(unit) then
         local class = select(2, UnitClass(unit))
         local colorCode = select(4, GetClassColor(class))
         return format("%s|c%s%s|r", icon, colorCode, name)
@@ -34,33 +77,44 @@ local function GetTargetString(unit)
     end
 end
 
+local function UpdateTargetLine(tip, targetUnit)
+    local line = addon:FindLine(tip, "^"..TARGET..":")
+    local text = GetTargetString(targetUnit)
+    if (line and not text) then
+        addon:HideLine(tip, "^"..TARGET..":")
+        return
+    end
+    if (text) then
+        local formatted = format("%s: %s", TARGET, text)
+        if (not line) then
+            tip:AddLine(formatted)
+        elseif (line:GetText() ~= formatted) then
+            line:SetText(formatted)
+        end
+    end
+end
+
+LibEvent:attachTrigger("tooltip:unit", function(self, tip, unit)
+    if SafeIsUnit(unit, "player") then
+        UpdateTargetLine(tip, "playertarget")
+    elseif SafeIsUnit(unit, "mouseover") then
+        UpdateTargetLine(tip, "mouseovertarget")
+    end
+end)
+
 GameTooltip:HookScript("OnUpdate", function(self, elapsed)
     self.updateElapsed = (self.updateElapsed or 0) + elapsed
     if (self.updateElapsed >= TOOLTIP_UPDATE_TIME) then
         self.updateElapsed = 0
+        local owner = self:GetOwner()
+        if (owner and (owner.unit or (owner.GetAttribute and owner:GetAttribute("unit")))) then
+            return
+        end
         if (not UnitExists("mouseover")) then return end
         local isPlayer = SafeBool(UnitIsPlayer, "mouseover")
         if (addon.db.unit.player.showTarget and isPlayer)
             or (addon.db.unit.npc.showTarget and not isPlayer) then
-            local line = addon:FindLine(self, "^"..TARGET..":")
-            local text = GetTargetString("mouseovertarget")
-            local changed = false
-            if (line and not text) then
-                addon:HideLine(self, "^"..TARGET..":")
-                changed = true
-            elseif (text) then
-                local formatted = format("%s: %s", TARGET, text)
-                if (not line) then
-                    self:AddLine(formatted)
-                    changed = true
-                elseif (line:GetText() ~= formatted) then
-                    line:SetText(formatted)
-                    changed = true
-                end
-            end
-            if (changed) then
-                self:Show()
-            end
+            UpdateTargetLine(self, "mouseovertarget")
         end
     end
 end)
