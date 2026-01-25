@@ -979,7 +979,8 @@ LibEvent:attachTrigger("tooltip.style.init", function(self, tip)
                 if (self.GetItem) then
                     link = select(2, self:GetItem())
                 else
-                    link = select(2, GetItemInfo(info.tooltipData.id))
+                    local itemInfo = C_Item.GetItemInfo(info.tooltipData.id)
+                    link = itemInfo and itemInfo.itemLink
                 end
                 if (link) then LibEvent:trigger("tooltip:item", self, link) end
             --1 技能

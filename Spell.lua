@@ -1,8 +1,6 @@
 
 local LibEvent = LibStub:GetLibrary("LibEvent.7000")
 
-local GetSpellTexture = GetSpellTexture or C_Spell.GetSpellTexture
-
 local addon = TinyTooltip
 
 local function ColorBorder(tip)
@@ -20,7 +18,7 @@ end
 local function SpellIcon(tip)
     if (addon.db.spell.showIcon) then
         local id = select(2, tip:GetSpell())
-        local texture = GetSpellTexture(id or 0)
+        local texture = C_Spell.GetSpellTexture(id or 0)
         local okText, text = pcall(function()
             return addon:GetLine(tip,1):GetText()
         end)
