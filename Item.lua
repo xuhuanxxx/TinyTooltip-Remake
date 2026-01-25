@@ -14,7 +14,7 @@ end
 local function ItemIcon(tip, link)
     if (addon.db.item.showItemIcon) then
         local itemInfo = C_Item.GetItemInfo(link)
-        local texture = itemInfo and itemInfo.iconFileID
+        local texture = itemInfo and itemInfo.itemTexture
         local text = addon:GetLine(tip,1):GetText()
         if (texture and not strfind(text, "^|T")) then
             addon:GetLine(tip,1):SetFormattedText("|T%s:16:16:0:0:32:32:2:30:2:30|t %s", texture, text)
@@ -25,7 +25,7 @@ end
 local function ItemStackCount(tip, link)
     if (addon.db.item.showStackCount) then
         local itemInfo = C_Item.GetItemInfo(link)
-        local stackCount = itemInfo and itemInfo.stackCount
+        local stackCount = itemInfo and itemInfo.itemStackCount
         if (stackCount and stackCount > 1) then
             local text = addon:GetLine(tip,1):GetText() .. format(" |cff00eeee/%s|r", stackCount)
             addon:GetLine(tip,1):SetText(text)
@@ -35,8 +35,8 @@ end
 
 LibEvent:attachTrigger("tooltip:item", function(self, tip, link)
     local itemInfo = C_Item.GetItemInfo(link)
-    local quality = (itemInfo and itemInfo.quality) or 0
-    local r, g, b = C_Item.GetItemQualityColor(quality)
+    local quality = (itemInfo and itemInfo.itemQuality) or 0
+    local r, g, b = GetItemQualityColor(quality)
     ColorBorder(tip, r, g, b)
     ItemStackCount(tip, link)
     ItemIcon(tip, link)
