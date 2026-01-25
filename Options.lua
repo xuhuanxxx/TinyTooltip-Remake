@@ -1168,7 +1168,7 @@ frame.tips:SetText(L["<Drag element to customize the style>"])
 frame.arrow = frame:CreateTexture(nil, "OVERLAY")
 frame.arrow:SetSize(32, 48)
 frame.arrow:SetTexture("Interface\\Buttons\\JumpUpArrow")
-frame.arrow:SetPoint("BOTTOM", framePCScrollFrame, "TOP", 35, -60)
+frame.arrow:SetPoint("BOTTOM", framePC, "TOP", 35, -60)
 frame:HookScript("OnShow", function() LibEvent:trigger("tinytooltip:diy:player", "player", true) end)
 
 local DraggingButton, OverButton, OverLine
