@@ -1,8 +1,6 @@
 
 local LibEvent = LibStub:GetLibrary("LibEvent.7000")
 
-local GetItemInfo = GetItemInfo or C_Item.GetItemInfo
-
 local addon = TinyTooltip
 
 local function ColorBorder(tip, r, g, b)
@@ -15,7 +13,8 @@ end
 
 local function ItemIcon(tip, link)
     if (addon.db.item.showItemIcon) then
-        local texture = select(10, GetItemInfo(link))
+        local itemInfo = C_Item.GetItemInfo(link)
+        local texture = itemInfo and itemInfo.iconFileID
         local text = addon:GetLine(tip,1):GetText()
         if (texture and not strfind(text, "^|T")) then
             addon:GetLine(tip,1):SetFormattedText("|T%s:16:16:0:0:32:32:2:30:2:30|t %s", texture, text)
@@ -25,7 +24,8 @@ end
 
 local function ItemStackCount(tip, link)
     if (addon.db.item.showStackCount) then
-        local stackCount = select(8, GetItemInfo(link))
+        local itemInfo = C_Item.GetItemInfo(link)
+        local stackCount = itemInfo and itemInfo.stackCount
         if (stackCount and stackCount > 1) then
             local text = addon:GetLine(tip,1):GetText() .. format(" |cff00eeee/%s|r", stackCount)
             addon:GetLine(tip,1):SetText(text)
@@ -34,8 +34,9 @@ local function ItemStackCount(tip, link)
 end
 
 LibEvent:attachTrigger("tooltip:item", function(self, tip, link)
-    local quality = select(3, GetItemInfo(link)) or 0
-    local r, g, b = GetItemQualityColor(quality)
+    local itemInfo = C_Item.GetItemInfo(link)
+    local quality = (itemInfo and itemInfo.quality) or 0
+    local r, g, b = C_Item.GetItemQualityColor(quality)
     ColorBorder(tip, r, g, b)
     ItemStackCount(tip, link)
     ItemIcon(tip, link)
