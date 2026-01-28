@@ -778,6 +778,7 @@ local options = {
         { keystring = "quest.coloredQuestBorder",   type = "checkbox" },
         { keystring = "general.alwaysShowIdInfo",   type = "checkbox" },
         { keystring = "general.SavedVariablesPerCharacter",   type = "checkbox" },
+        { keystring = "general.hideUnitFrameHint",  type = "checkbox" },
     },
     pc = {
         { keystring = "unit.player.showTarget",           type = "checkbox" },
@@ -1398,6 +1399,14 @@ LibEvent:attachTrigger("tinytooltip:diy:player", function(self, unit, skipDisabl
     while (frameDIY.lines[k]) do
         frameDIY.lines[k]:Hide()
         k = k + 1
+    end
+    -- 确保 BigFactionIcon 存在（可能在 tooltip:init 之前访问）
+    if (not frame.BigFactionIcon and (frame == GameTooltip or frame.identity == "diy")) then
+        frame.BigFactionIcon = frame:CreateTexture(nil, "OVERLAY")
+        frame.BigFactionIcon:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 18, 0)
+        frame.BigFactionIcon:SetBlendMode("ADD")
+        frame.BigFactionIcon:SetScale(0.24)
+        frame.BigFactionIcon:SetAlpha(0.40)
     end
     if (diytable.factionBig and diytable.factionBig.enable) then
         frameDIY.BigFactionIcon:SetTexture("Interface\\Timer\\".. raw.factionGroup .."-Logo")
