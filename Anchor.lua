@@ -52,19 +52,28 @@ local function ResolveAnchorAction(targetType, sourceType, config, depth)
     
     -- 2. Check returnInCombat
     if (config.returnInCombat and inCombat) then
-        return ResolveAnchorAction(targetType, sourceType, addon.db.general.anchor, depth + 1)
+        local fallback = addon.db.general.anchor
+        if (fallback == config) then return { action = "DEFAULT" } end
+        return ResolveAnchorAction(targetType, sourceType, fallback, depth + 1)
     end
     
     -- 3. Check returnOnUnitFrame
     if (config.returnOnUnitFrame and sourceType == "UNITFRAME") then
-        return ResolveAnchorAction(targetType, sourceType, addon.db.general.anchor, depth + 1)
+        local fallback = addon.db.general.anchor
+        if (fallback == config) then return { action = "DEFAULT" } end
+        return ResolveAnchorAction(targetType, sourceType, fallback, depth + 1)
     end
     
     -- 4. Resolve position
     local position = config.position
     
     if (position == "inherit") then
-        return ResolveAnchorAction(targetType, sourceType, addon.db.general.anchor, depth + 1)
+        local fallback = addon.db.general.anchor
+        -- Cycle guard: if fallback is same table as config (e.g. npc.anchor nil and general.anchor.position == "inherit"), break to avoid stack overflow
+        if (fallback == config) then
+            return { action = "DEFAULT" }
+        end
+        return ResolveAnchorAction(targetType, sourceType, fallback, depth + 1)
     elseif (position == "cursor") then
         return {
             action = "CURSOR",
