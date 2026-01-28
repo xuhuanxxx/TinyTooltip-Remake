@@ -9,7 +9,7 @@ local addon = TinyTooltip
 -- ============================================================================
 -- DEBUG
 -- ============================================================================
-local DEBUG_ANCHOR = true  -- Set to false to disable debug prints
+local DEBUG_ANCHOR = false  -- Set to true to enable debug prints
 
 local function DebugPrint(...)
     if DEBUG_ANCHOR then
