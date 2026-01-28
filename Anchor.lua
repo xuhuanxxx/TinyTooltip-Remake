@@ -295,6 +295,7 @@ GameTooltip:HookScript("OnShow", function(self)
     
     local unit = select(2, self:GetUnit())
     if (not unit) then
+        unitFrameOwner = nil
         pendingUnitReposition = false
         return
     end
