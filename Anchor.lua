@@ -192,6 +192,8 @@ LibEvent:attachTrigger("tooltip:anchor", function(self, tip, parent)
         unit = focus:GetAttribute("unit")
         if (unit) then
             sourceType = "UNITFRAME"
+            unitFrameOwner = focus
+            pendingUnitReposition = true
         end
     end
     
@@ -199,7 +201,16 @@ LibEvent:attachTrigger("tooltip:anchor", function(self, tip, parent)
         unit = "mouseover"
     end
     
-    -- Determine target type
+    -- CRITICAL FIX: For UnitFrame tooltips, defer positioning to OnShow/tooltip:unit
+    -- where unit information is guaranteed to be available.
+    -- This prevents targetType from being misidentified as "OTHER" when unit info is not ready yet.
+    if (sourceType == "UNITFRAME") then
+        -- Only record state, do NOT execute positioning
+        -- Let OnShow/tooltip:unit handle it when unit info is ready
+        return
+    end
+    
+    -- For WORLD tooltips, execute positioning immediately
     local targetType = "OTHER"
     if (UnitIsPlayer(unit)) then
         targetType = "PLAYER"
@@ -207,13 +218,8 @@ LibEvent:attachTrigger("tooltip:anchor", function(self, tip, parent)
         targetType = "NPC"
     end
     
-    -- Get appropriate config
     local config = GetAnchorConfig(targetType)
-    
-    -- Resolve action
     local action = ResolveAnchorAction(targetType, sourceType, config)
-    
-    -- Execute action
     ExecuteAnchorAction(tip, parent, action)
 end)
 
