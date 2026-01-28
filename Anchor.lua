@@ -225,6 +225,16 @@ LibEvent:attachTrigger("tooltip:anchor", function(self, tip, parent)
         targetType = "NPC"
     end
     
+    -- ADDITIONAL FIX: If targetType is still "OTHER", it means unit info is not ready yet.
+    -- This can happen when hovering UnitFrames that don't have .unit or GetAttribute.
+    -- Defer positioning to OnShow where unit info will be available.
+    if (targetType == "OTHER") then
+        DebugPrint("[tooltip:anchor] targetType=OTHER, unit info not ready, deferring to OnShow")
+        unitFrameOwner = GetMouseFocus()  -- Record focus for later
+        pendingUnitReposition = true
+        return
+    end
+    
     DebugPrint("[tooltip:anchor] WORLD unit - targetType:", targetType, "unit:", unit)
     
     local config = GetAnchorConfig(targetType)
