@@ -259,6 +259,8 @@ LibEvent:attachTrigger("tooltip:unit", function(self, tip, unit)
     -- Execute action
     ExecuteAnchorAction(tip, unitFrameOwner, action)
     
+    -- Clear both state variables to prevent double positioning
+    unitFrameOwner = nil
     pendingUnitReposition = false
 end)
 
@@ -300,4 +302,8 @@ GameTooltip:HookScript("OnShow", function(self)
     
     -- Execute action
     ExecuteAnchorAction(self, unitFrameOwner, action)
+    
+    -- Clear both state variables to prevent double positioning
+    unitFrameOwner = nil
+    pendingUnitReposition = false
 end)
