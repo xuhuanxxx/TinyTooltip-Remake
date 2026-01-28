@@ -141,6 +141,11 @@ local function SetTooltipPositionImmediate(tip, owner, anchor, isUnitFrame)
     end
 end
 
+-- 修复单位框体 tooltip 跳动问题
+local unitFrameOwner = nil
+local pendingUnitReposition = false
+local isUnitFramePlayer = false
+
 LibEvent:attachTrigger("tooltip:anchor", function(self, tip, parent)
     if (tip ~= GameTooltip) then return end
     local unit
@@ -181,11 +186,6 @@ LibEvent:attachTrigger("tooltip:anchor", function(self, tip, parent)
         end
     end
 end)
-
--- 修复单位框体 tooltip 跳动问题
-local unitFrameOwner = nil
-local pendingUnitReposition = false
-local isUnitFramePlayer = false
 
 -- Hook SetOwner：检测单位框体并预设位置
 hooksecurefunc(GameTooltip, "SetOwner", function(self, owner, anchor)
