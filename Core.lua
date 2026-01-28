@@ -365,15 +365,20 @@ end
 
 --好友图标
 function addon:GetFriendIcon(unit)
-    if (UnitIsPlayer(unit)) then
-        local guid = UnitGUID(unit)
-        if (guid and C_FriendList.IsFriend(guid)) then
-            return self.icons.friend
-        end
-        if (guid and guid~=UnitGUID("player")) then
-            local accountInfo = C_BattleNet_GetAccountInfoByGUID(guid)
-            if (accountInfo and accountInfo.isFriend) then
-                return self.icons.bnetfriend
+    local ok, isPlayer = pcall(UnitIsPlayer, unit)
+    if (ok and isPlayer) then
+        local okGUID, guid = pcall(UnitGUID, unit)
+        if (okGUID and guid) then
+            local okFriend, isFriend = pcall(C_FriendList.IsFriend, guid)
+            if (okFriend and isFriend) then
+                return self.icons.friend
+            end
+            local okPlayerGUID, playerGUID = pcall(UnitGUID, "player")
+            if (okPlayerGUID and guid~=playerGUID) then
+                local okBNet, accountInfo = pcall(C_BattleNet.GetAccountInfoByGUID, guid)
+                if (okBNet and accountInfo and accountInfo.isFriend) then
+                    return self.icons.bnetfriend
+                end
             end
         end
     end
