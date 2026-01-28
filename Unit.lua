@@ -11,23 +11,6 @@ local FACTION_ALLIANCE = FACTION_ALLIANCE
 
 local addon = TinyTooltip
 
-local function IsUnitTooltip(tt)
-    local owner = tt and tt:GetOwner()
-    if not owner then return false end
-    
-    -- 安全访问 owner.unit
-    local ok, unit = pcall(function() return owner.unit end)
-    if (ok and unit) then return true end
-    
-    -- 安全访问 GetAttribute
-    if (owner.GetAttribute) then
-        local okAttr, attrUnit = pcall(owner.GetAttribute, owner, "unit")
-        if (okAttr and attrUnit) then return true end
-    end
-    
-    return false
-end
-
 local function SafeBool(fn, ...)
     local ok, value = pcall(fn, ...)
     if (not ok) then

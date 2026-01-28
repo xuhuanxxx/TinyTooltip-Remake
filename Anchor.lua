@@ -6,16 +6,6 @@ local GetMouseFocus = GetMouseFocus or GetMouseFoci
 
 local addon = TinyTooltip
 
--- ============================================================================
--- DEBUG
--- ============================================================================
-local DEBUG_ANCHOR = false  -- Set to true to enable debug prints
-
-local function DebugPrint(...)
-    if DEBUG_ANCHOR then
-        print("|cff00ff00[AnchorDebug]|r", ...)
-    end
-end
 
 -- ============================================================================
 -- UNIFIED ANCHOR DECISION MATRIX
@@ -177,8 +167,6 @@ local pendingUnitReposition = false
 LibEvent:attachTrigger("tooltip:anchor", function(self, tip, parent)
     if (tip ~= GameTooltip) then return end
     
-    DebugPrint("[tooltip:anchor] START")
-    
     -- Gather context
     local unit
     local focus = GetMouseFocus()
@@ -211,7 +199,7 @@ LibEvent:attachTrigger("tooltip:anchor", function(self, tip, parent)
     -- where unit information is guaranteed to be available.
     -- This prevents targetType from being misidentified as "OTHER" when unit info is not ready yet.
     if (sourceType == "UNITFRAME") then
-        DebugPrint("[tooltip:anchor] UnitFrame detected, deferring to OnShow/tooltip:unit")
+
         -- Only record state, do NOT execute positioning
         -- Let OnShow/tooltip:unit handle it when unit info is ready
         return
@@ -229,17 +217,15 @@ LibEvent:attachTrigger("tooltip:anchor", function(self, tip, parent)
     -- This can happen when hovering UnitFrames that don't have .unit or GetAttribute.
     -- Defer positioning to OnShow where unit info will be available.
     if (targetType == "OTHER") then
-        DebugPrint("[tooltip:anchor] targetType=OTHER, unit info not ready, deferring to OnShow")
         unitFrameOwner = GetMouseFocus()  -- Record focus for later
         pendingUnitReposition = true
         return
     end
-    
-    DebugPrint("[tooltip:anchor] WORLD unit - targetType:", targetType, "unit:", unit)
+
     
     local config = GetAnchorConfig(targetType)
     local action = ResolveAnchorAction(targetType, sourceType, config)
-    DebugPrint("[tooltip:anchor] Executing action:", action.action)
+
     ExecuteAnchorAction(tip, parent, action)
 end)
 
@@ -260,21 +246,15 @@ LibEvent:attachTrigger("tooltip:unit", function(self, tip, unit)
     if (not unit) then return end
     if (not unitFrameOwner and not pendingUnitReposition) then return end
     
-    DebugPrint("[tooltip:unit] START - unit:", unit)
-    
     -- Determine target type
     local ok, isPlayer = pcall(UnitIsPlayer, unit)
     local targetType = (ok and isPlayer) and "PLAYER" or "NPC"
-    
-    DebugPrint("[tooltip:unit] targetType:", targetType)
     
     -- Get appropriate config
     local config = GetAnchorConfig(targetType)
     
     -- Resolve action with UNITFRAME source type
     local action = ResolveAnchorAction(targetType, "UNITFRAME", config)
-    
-    DebugPrint("[tooltip:unit] Executing action:", action.action, "position:", config.position)
     
     -- Execute action
     ExecuteAnchorAction(tip, unitFrameOwner, action)
@@ -308,21 +288,15 @@ GameTooltip:HookScript("OnShow", function(self)
         return
     end
     
-    DebugPrint("[OnShow] START - unit:", unit)
-    
     -- Determine target type
     local ok, isPlayer = pcall(UnitIsPlayer, unit)
     local targetType = (ok and isPlayer) and "PLAYER" or "NPC"
-    
-    DebugPrint("[OnShow] targetType:", targetType)
     
     -- Get appropriate config
     local config = GetAnchorConfig(targetType)
     
     -- Resolve action with UNITFRAME source type
     local action = ResolveAnchorAction(targetType, "UNITFRAME", config)
-    
-    DebugPrint("[OnShow] Executing action:", action.action, "position:", config.position)
     
     -- Execute action
     ExecuteAnchorAction(self, unitFrameOwner, action)
