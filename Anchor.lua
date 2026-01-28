@@ -185,6 +185,8 @@ LibEvent:attachTrigger("tooltip:anchor", function(self, tip, parent)
         unit = focus:GetAttribute("unit")
         if (unit) then
             sourceType = "UNITFRAME"
+            unitFrameOwner = focus
+            pendingUnitReposition = true
         end
     end
     
