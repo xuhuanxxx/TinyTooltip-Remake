@@ -988,7 +988,8 @@ LibEvent:attachTrigger("tooltip.style.init", function(self, tip)
     tip.style = CreateFrame("Frame", nil, tip, BackdropTemplateMixin and "BackdropTemplate" or nil)
     tip.style:SetFrameLevel(tip:GetFrameLevel())
     tip.style:SetAllPoints()
-    tip.style:SetBackdrop(backdrop)
+    -- 安全设置 backdrop：如果 frame 还没有有效尺寸，延迟到 OnShow 时设置
+    SafeSetBackdrop(tip.style, backdrop)
     tip.style:SetBackdropColor(0, 0, 0, 0.9)
     tip.style:SetBackdropBorderColor(0.6, 0.6, 0.6, 0.8)
     tip.style.inside = CreateFrame("Frame", nil, tip.style, BackdropTemplateMixin and "BackdropTemplate" or nil)
@@ -1012,8 +1013,25 @@ LibEvent:attachTrigger("tooltip.style.init", function(self, tip)
     tip.style.mask:Hide()
     
     tip.TinyHookScript = addon.TinyHookScript
-    tip:HookScript("OnShow", function(self) LibEvent:trigger("tooltip:show", self) end)
-    tip:HookScript("OnHide", function(self) LibEvent:trigger("tooltip:hide", self) end)
+    tip:HookScript("OnShow", function(self)
+        -- 确保 style frame 有有效尺寸后再设置 backdrop
+        if (self.style and self.style.pendingBackdrop) then
+            if (not SafeSetBackdrop(self.style, self.style.pendingBackdrop)) then
+                -- 如果仍然无法设置，延迟一段时间后再尝试
+                C_Timer.After(0.01, function()
+                    if (self.style and self.style.pendingBackdrop) then
+                        SafeSetBackdrop(self.style, self.style.pendingBackdrop)
+                    end
+                end)
+            end
+        end
+        LibEvent:trigger("tooltip:show", self)
+    end)
+    tip:HookScript("OnHide", function(self)
+        self._isUnitTooltip = nil
+        self._hintLineHidden = nil
+        LibEvent:trigger("tooltip:hide", self)
+    end)
 
     -- for 10.0
     if (tip.ProcessInfo) then
@@ -1049,6 +1067,8 @@ LibEvent:attachTrigger("tooltip.style.init", function(self, tip)
                 if (not self.GetUnit) then return end
                 local unit = select(2, self:GetUnit())
                 if (unit) then
+                    -- 标记这是一个单位 tooltip，用于后续的 GameTooltip_AddInstructionLine hook
+                    self._isUnitTooltip = true
                     LibEvent:trigger("tooltip:unit", self, unit, guid, flag)
                 end
             --7 BUFF|DEBUFF
@@ -1076,6 +1096,8 @@ LibEvent:attachTrigger("tooltip.style.init", function(self, tip)
         function(self)
             local unit = select(2, self:GetUnit())
             if (not unit) then return end
+            -- 标记这是一个单位 tooltip，用于后续的 GameTooltip_AddInstructionLine hook
+            self._isUnitTooltip = true
             LibEvent:trigger("tooltip:unit", self, unit)
         end
     )

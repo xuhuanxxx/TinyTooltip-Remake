@@ -134,6 +134,8 @@ local function ShowBigFactionIcon(tip, config, raw)
     end
 end
 
+
+
 local function PlayerCharacter(tip, unit, config, raw)
     local specLine = GetOriginalSpecLine(tip, raw and raw.className)
     if (specLine) then
@@ -184,6 +186,7 @@ local function NonPlayerCharacter(tip, unit, config, raw)
     ColorBackground(tip, config, raw)
     GrayForDead(tip, config, unit)
     ShowBigFactionIcon(tip, config, raw)
+    
     addon:AutoSetTooltipWidth(tip)
 end
 
@@ -196,6 +199,51 @@ LibEvent:attachTrigger("tooltip:unit", function(self, tip, unit)
         NonPlayerCharacter(tip, unit, addon.db.unit.npc, raw)
     end
 end)
+
+if (GameTooltip_AddInstructionLine and UNIT_POPUP_RIGHT_CLICK) then
+    -- 在 tooltip 清除时重置标记
+    LibEvent:attachTrigger("tooltip:cleared", function(self, tip)
+        if (tip == GameTooltip) then
+            tip._isUnitTooltip = nil
+            tip._hintLineHidden = nil
+        end
+    end)
+    
+    hooksecurefunc("GameTooltip_AddInstructionLine", function(tt, text)
+        if (not addon.db.general.hideUnitFrameHint) then return end
+        if (tt ~= GameTooltip) then return end
+        if (text ~= UNIT_POPUP_RIGHT_CLICK) then return end
+        
+        -- 避免重复处理
+        if (tt._hintLineHidden) then return end
+        
+        -- 确保是单位 Tooltip（由 Core.lua 标记）
+        if (not tt._isUnitTooltip) then return end
+        
+        local i = tt:NumLines()
+        local line = _G[tt:GetName() .. "TextLeft" .. i]
+        if (not line) then return end
+        
+        local tmpText = line:GetText()
+        if (issecretvalue and issecretvalue(tmpText)) then return end
+        if (tmpText ~= text) then return end
+        
+        -- 标记已处理，避免重复
+        tt._hintLineHidden = true
+        
+        line:SetText("")
+        line:Hide()
+        
+        local mLine = _G[tt:GetName() .. "TextLeft" .. (i - 1)]
+        if (mLine and mLine.GetText) then
+            local prevText = mLine:GetText()
+            if (not (issecretvalue and issecretvalue(prevText)) and prevText == " ") then
+                mLine:Hide()
+            end
+        end
+        -- 不调用 tt:Show()，避免闪烁
+    end)
+end
 
 addon.ColorUnitBorder = ColorBorder
 addon.ColorUnitBackground = ColorBackground
