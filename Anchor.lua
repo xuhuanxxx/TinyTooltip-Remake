@@ -143,20 +143,13 @@ end
 
 -- Helper: Get anchor config for target type
 local function GetAnchorConfig(targetType)
-    local config
     if (targetType == "PLAYER") then
-        config = addon.db.unit.player.anchor
+        return addon.db.unit.player.anchor or addon.db.general.anchor
     elseif (targetType == "NPC") then
-        config = addon.db.unit.npc.anchor
-    end
-    
-    -- If unit-specific config exists but position is "default",
-    -- treat it as "no specific config" and fallback to general
-    if (config and config.position == "default") then
+        return addon.db.unit.npc.anchor or addon.db.general.anchor
+    else
         return addon.db.general.anchor
     end
-    
-    return config or addon.db.general.anchor
 end
 
 -- ============================================================================
