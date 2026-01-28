@@ -371,8 +371,8 @@ function addon:GetFriendIcon(unit)
             return self.icons.friend
         end
         if (guid and guid~=UnitGUID("player")) then
-            local accountInfo = C_BattleNet_GetAccountInfoByGUID(guid)
-            if (accountInfo and accountInfo.isFriend) then
+            local okBNet, accountInfo = pcall(C_BattleNet_GetAccountInfoByGUID, guid)
+            if (okBNet and accountInfo and accountInfo.isFriend) then
                 return self.icons.bnetfriend
             end
         end

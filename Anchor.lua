@@ -74,6 +74,9 @@ LibEvent:attachTrigger("tooltip:anchor", function(self, tip, parent)
     end
     if (not unit and focus and focus.GetAttribute) then
         unit = focus:GetAttribute("unit")
+        if (unit) then
+            isUnitFrame = true
+        end
     end
     if (not unit) then
         unit = "mouseover"
