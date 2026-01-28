@@ -214,27 +214,22 @@ LibEvent:attachTrigger("tooltip:anchor", function(self, tip, parent)
         return
     end
     
-    -- For WORLD tooltips, execute positioning immediately
+    -- For WORLD tooltips
     local targetType = "OTHER"
     if (UnitIsPlayer(unit)) then
         targetType = "PLAYER"
     elseif (UnitExists(unit)) then
         targetType = "NPC"
     end
-    
-    -- ADDITIONAL FIX: If targetType is still "OTHER", it means unit info is not ready yet.
-    -- This can happen when hovering UnitFrames that don't have .unit or GetAttribute.
-    -- Defer positioning to OnShow where unit info will be available.
+    -- OTHER = non-unit world objects (mailbox, sign). Defer to OnShow for first-frame position;
+    -- OnShow will run general.anchor when GetUnit() returns nil (see OnShow below).
     if (targetType == "OTHER") then
-        unitFrameOwner = GetMouseFocus()  -- Record focus for later
         pendingUnitReposition = true
         return
     end
 
-    
     local config = GetAnchorConfig(targetType)
     local action = ResolveAnchorAction(targetType, sourceType, config)
-
     ExecuteAnchorAction(tip, parent, action)
 end)
 
@@ -289,31 +284,30 @@ LibEvent:attachTrigger("tooltip:spell", function(self, tip)
     end
 end)
 
--- Hook OnShow：显示时立即重定位（确保 UnitFrame 正确显示）
+-- Hook OnShow：显示时立即重定位（UnitFrame 或延迟的 OTHER）
 GameTooltip:HookScript("OnShow", function(self)
     if (not unitFrameOwner and not pendingUnitReposition) then return end
     
     local unit = select(2, self:GetUnit())
     if (not unit) then
+        -- Deferred OTHER (mailbox, sign): no unit, apply general.anchor
+        if (pendingUnitReposition and not unitFrameOwner) then
+            local config = GetAnchorConfig("OTHER")
+            local action = ResolveAnchorAction("OTHER", "WORLD", config)
+            ExecuteAnchorAction(self, nil, action)
+        end
         unitFrameOwner = nil
         pendingUnitReposition = false
         return
     end
     
-    -- Determine target type
+    -- Deferred UNITFRAME: has unit, apply unit anchor
     local ok, isPlayer = pcall(UnitIsPlayer, unit)
     local targetType = (ok and isPlayer) and "PLAYER" or "NPC"
-    
-    -- Get appropriate config
     local config = GetAnchorConfig(targetType)
-    
-    -- Resolve action with UNITFRAME source type
     local action = ResolveAnchorAction(targetType, "UNITFRAME", config)
-    
-    -- Execute action
     ExecuteAnchorAction(self, unitFrameOwner, action)
     
-    -- Clear both state variables to prevent double positioning
     unitFrameOwner = nil
     pendingUnitReposition = false
 end)
