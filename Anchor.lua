@@ -122,7 +122,14 @@ local function ExecuteAnchorAction(tip, owner, action)
             end,
         })
     elseif (action.action == "CURSOR_RIGHT") then
+        -- Trigger event for compatibility
         LibEvent:trigger("tooltip.anchor.cursor.right", tip, owner)
+        -- Directly set CURSOR_RIGHT position WITHOUT calling SetOwner
+        -- (which can cause Taint issues). Instead, manually position to cursor right.
+        local x, y = GetCursorPosition()
+        local scale = tip:GetEffectiveScale()
+        tip:ClearAllPoints()
+        tip:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", floor(x/scale + 36), floor(y/scale - 12))
     elseif (action.action == "STATIC") then
         LibEvent:trigger("tooltip.anchor.static", tip, owner, action.x, action.y, action.point)
         tip:ClearAllPoints()
