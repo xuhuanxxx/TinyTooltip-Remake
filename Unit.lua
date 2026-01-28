@@ -247,3 +247,4 @@ end
 
 addon.ColorUnitBorder = ColorBorder
 addon.ColorUnitBackground = ColorBackground
+addon.IsUnitTooltip = IsUnitTooltip

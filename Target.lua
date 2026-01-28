@@ -135,8 +135,7 @@ GameTooltip:HookScript("OnUpdate", function(self, elapsed)
     self.updateElapsed = (self.updateElapsed or 0) + elapsed
     if (self.updateElapsed >= TOOLTIP_UPDATE_TIME) then
         self.updateElapsed = 0
-        local owner = self:GetOwner()
-        if (owner and (owner.unit or (owner.GetAttribute and owner:GetAttribute("unit")))) then
+        if (addon.IsUnitTooltip and addon.IsUnitTooltip(self)) then
             return
         end
         if (not SafeBool(UnitExists, "mouseover")) then return end
