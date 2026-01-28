@@ -1400,13 +1400,7 @@ LibEvent:attachTrigger("tinytooltip:diy:player", function(self, unit, skipDisabl
         k = k + 1
     end
     -- 确保 BigFactionIcon 存在（可能在 tooltip:init 之前访问）
-    if (not frameDIY.BigFactionIcon and (frameDIY == GameTooltip or frameDIY.identity == "diy")) then
-        frameDIY.BigFactionIcon = frameDIY:CreateTexture(nil, "OVERLAY")
-        frameDIY.BigFactionIcon:SetPoint("TOPRIGHT", frameDIY, "TOPRIGHT", 18, 0)
-        frameDIY.BigFactionIcon:SetBlendMode("ADD")
-        frameDIY.BigFactionIcon:SetScale(0.24)
-        frameDIY.BigFactionIcon:SetAlpha(0.40)
-    end
+    addon.InitBigFactionIcon(frameDIY)
     if (diytable.factionBig and diytable.factionBig.enable) then
         frameDIY.BigFactionIcon:SetTexture("Interface\\Timer\\".. raw.factionGroup .."-Logo")
         frameDIY.BigFactionIcon:Show()
